@@ -1,0 +1,36 @@
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body py-2">
+    <form method="get" action="{% url destino %}" class="row g-2 align-items-end">
+      <div class="col-12 col-lg-auto">
+        <div class="d-flex flex-wrap gap-1" role="group" aria-label="Intervalo rápido">
+          {% for valor, rotulo in atalhos %}
+            <a href="?dias={{ valor }}{% if filtro.periodo.value %}&periodo={{ filtro.periodo.value|urlencode }}{% endif %}"
+               class="btn btn-sm {% if dias == valor %}btn-brand{% else %}btn-outline-secondary{% endif %}">{{ rotulo }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg">
+        <label class="form-label small mb-0" for="{{ filtro.inicio.id_for_label }}">De</label>
+        <input type="date" name="inicio" id="{{ filtro.inicio.id_for_label }}" class="form-control form-control-sm" value="{% if not dias or dias == 'todos' %}{{ filtro.inicio.value|default:'' }}{% endif %}">
+      </div>
+      <div class="col-6 col-md-3 col-lg">
+        <label class="form-label small mb-0" for="{{ filtro.fim.id_for_label }}">Até</label>
+        <input type="date" name="fim" id="{{ filtro.fim.id_for_label }}" class="form-control form-control-sm" value="{% if not dias or dias == 'todos' %}{{ filtro.fim.value|default:'' }}{% endif %}">
+      </div>
+      <div class="col-8 col-md-4 col-lg">
+        <label class="form-label small mb-0" for="{{ filtro.periodo.id_for_label }}">Período</label>
+        <select name="periodo" id="{{ filtro.periodo.id_for_label }}" class="form-select form-select-sm">
+          {% for valor, rotulo in filtro.fields.periodo.choices %}
+            <option value="{{ valor }}" {% if filtro.periodo.value == valor %}selected{% endif %}>{{ rotulo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-4 col-md-2 col-lg-auto d-flex gap-1">
+        <button class="btn btn-sm btn-brand flex-grow-1" type="submit"><i class="bi bi-funnel"></i><span class="d-none d-xl-inline ms-1">Filtrar</span></button>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url destino %}?dias=todos" title="Limpar filtros"><i class="bi bi-x-lg"></i></a>
+      </div>
+    </form>
+    {% if filtro.non_field_errors %}<div class="text-danger small mt-2">{{ filtro.non_field_errors|join:" " }}</div>{% endif %}
+  </div>
+</div>
+

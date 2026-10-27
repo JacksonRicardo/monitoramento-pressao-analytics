@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+  <div>
+    <h1 class="h3 fw-bold mb-0">Olá, {{ user.first_name|default:user.username }} 👋</h1>
+    <p class="text-body-secondary mb-0">Acompanhe a evolução da sua pressão arterial.</p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-success" href="{% url 'pressao:exportar_excel' %}?{{ query_export }}"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
+    <a class="btn btn-danger" href="{% url 'pressao:exportar_pdf' %}?{{ query_export }}"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+    <a class="btn btn-outline-secondary" href="{% url 'pressao:exportar' %}?{{ query_export }}"><i class="bi bi-sliders me-1"></i>Personalizar</a>
+  </div>
+</div>
+
+{% include "partials/filtros.html" with destino="pressao:dashboard" %}
+
+{% if analise.vazio %}
+  <div class="card border-0 shadow-sm text-center py-5">
+    <div class="card-body">
+      <i class="bi bi-clipboard2-pulse display-3 text-brand"></i>
+      {% if total_geral %}
+        <h2 class="h4 mt-3">Nenhuma medição no período selecionado</h2>
+        <p class="text-body-secondary">Ajuste os filtros ou <a href="?dias=todos">veja todas as medições</a>.</p>
+      {% else %}
+        <h2 class="h4 mt-3">Você ainda não registrou medições</h2>
+        <p class="text-body-secondary">Registre a primeira medição ou importe sua planilha de controle.</p>
+        <div class="d-flex justify-content-center flex-wrap gap-2">
+          <a class="btn btn-brand" href="{% url 'pressao:nova' %}"><i class="bi bi-plus-lg me-1"></i>Nova medição</a>
+          <a class="btn btn-outline-secondary" href="{% url 'pressao:importar' %}"><i class="bi bi-upload me-1"></i>Importar planilha</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% else %}
+
+{# ---------------------------- KPIs ---------------------------- #}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">
+    <div class="card kpi h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="kpi-icone bg-danger-subtle text-danger"><i class="bi bi-activity"></i></div>
+        <div class="kpi-rotulo">Média (mmHg)</div>
+        <div class="kpi-valor">{{ analise.sistolica.media }}<span class="text-body-secondary">/</span>{{ analise.diastolica.media }}</div>
+        <div class="small text-body-secondary">Mediana {{ analise.sistolica.mediana }}/{{ analise.diastolica.mediana }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card kpi h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="kpi-icone bg-success-subtle text-success"><i class="bi bi-heart-pulse"></i></div>
+        <div class="kpi-rotulo">Pulsação média</div>
+        <div class="kpi-valor">{% if analise.pulsacao %}{{ analise.pulsacao.media }} <small class="fs-6 text-body-secondary">bpm</small>{% else %}—{% endif %}</div>
+        {% if analise.pulsacao %}<div class="small text-body-secondary">{{ analise.pulsacao.minimo }} a {{ analise.pulsacao.maximo }} bpm</div>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card kpi h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="kpi-icone bg-warning-subtle text-warning-emphasis"><i class="bi bi-arrow-down-up"></i></div>
+        <div class="kpi-rotulo">Máximos · Mínimos</div>
+        <div class="kpi-valor fs-4">{{ analise.maximos }}</div>
+        <div class="small text-body-secondary">Mínimos {{ analise.minimos }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card kpi h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="kpi-icone bg-primary-subtle text-primary"><i class="bi bi-calendar-check"></i></div>
+        <div class="kpi-rotulo">Medições</div>
+        <div class="kpi-valor">{{ analise.total|intcomma }}</div>
+        <div class="small text-body-secondary">{{ analise.dias_com_registro }} dia{{ analise.dias_com_registro|pluralize }} · {{ analise.regularidade }}% de regularidade</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ------------------------ Última medição + insights ------------------------ #}
+<div class="row g-3 mb-3">
+  <div class="col-lg-4">
+    {% with u=analise.ultima %}
+    <div class="card border-0 shadow-sm h-100 ultima-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="kpi-rotulo">Última medição</div>
+            <div class="display-6 fw-bold">{{ u.sistolica }}/{{ u.diastolica }}</div>
+            <div class="text-body-secondary small">{{ u.data|date:"d/m/Y" }} às {{ u.hora|time:"H:i" }} · {{ u.periodo }}</div>
+          </div>
+          <span class="badge rounded-pill faixa-{{ u.classificacao.chave }}">{{ u.classificacao.rotulo }}</span>
+        </div>
+        <hr>
+        <div class="row text-center g-2 small">
+          <div class="col-4"><div class="fw-semibold fs-5">{{ u.pulsacao|default:"—" }}</div><div class="text-body-secondary">Pulso</div></div>
+          <div class="col-4"><div class="fw-semibold fs-5">{{ u.pressao_media_arterial }}</div><div class="text-body-secondary">PAM</div></div>
+          <div class="col-4"><div class="fw-semibold fs-5">{{ u.pressao_pulso }}</div><div class="text-body-secondary">P. pulso</div></div>
+        </div>
+        {% if u.observacoes %}<div class="mt-3 small"><i class="bi bi-chat-left-text me-1"></i>{{ u.observacoes }}</div>{% endif %}
+      </div>
+    </div>
+    {% endwith %}
+  </div>
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-0 pt-3"><h2 class="h6 fw-bold mb-0"><i class="bi bi-lightbulb me-1 text-warning"></i>Análise do período</h2></div>
+      <div class="card-body pt-2">
+        <div class="row g-3">
+          <div class="col-sm-6 col-xl-4">
+            <div class="insight">
+              <div class="insight-rotulo">Tendência sistólica</div>
+              {% if analise.tendencia %}
+                <div class="insight-valor tendencia-{{ analise.tendencia.sistolica_rotulo|slugify }}">
+                  {% if analise.tendencia.sistolica_rotulo == "alta" %}<i class="bi bi-graph-up-arrow"></i>{% elif analise.tendencia.sistolica_rotulo == "queda" %}<i class="bi bi-graph-down-arrow"></i>{% else %}<i class="bi bi-arrow-right"></i>{% endif %}
+                  {{ analise.tendencia.sistolica|floatformat:1 }} <small>mmHg/sem</small>
+                </div>
+              {% else %}<div class="insight-valor text-body-secondary">Poucos dados</div>{% endif %}
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-4">
+            <div class="insight">
+              <div class="insight-rotulo">Tendência diastólica</div>
+              {% if analise.tendencia %}
+                <div class="insight-valor tendencia-{{ analise.tendencia.diastolica_rotulo|slugify }}">
+                  {% if analise.tendencia.diastolica_rotulo == "alta" %}<i class="bi bi-graph-up-arrow"></i>{% elif analise.tendencia.diastolica_rotulo == "queda" %}<i class="bi bi-graph-down-arrow"></i>{% else %}<i class="bi bi-arrow-right"></i>{% endif %}
+                  {{ analise.tendencia.diastolica|floatformat:1 }} <small>mmHg/sem</small>
+                </div>
+              {% else %}<div class="insight-valor text-body-secondary">Poucos dados</div>{% endif %}
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-4">
+            <div class="insight">
+              <div class="insight-rotulo">Variabilidade (CV sist./diast.)</div>
+              <div class="insight-valor">{{ analise.sistolica.cv|floatformat:1 }}% / {{ analise.diastolica.cv|floatformat:1 }}%</div>
+              <div class="small text-body-secondary">Desvio ±{{ analise.sistolica.desvio|floatformat:1 }} / ±{{ analise.diastolica.desvio|floatformat:1 }}</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-4">
+            <div class="insight">
+              <div class="insight-rotulo">Leituras ≥ 140/90</div>
+              <div class="insight-valor">{{ analise.leituras_elevadas }} <small class="text-body-secondary">de {{ analise.total }}</small></div>
+              {% if analise.leituras_muito_altas %}<div class="small text-danger"><i class="bi bi-exclamation-triangle me-1"></i>{{ analise.leituras_muito_altas }} ≥ 180/110</div>{% endif %}
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-4">
+            <div class="insight">
+              <div class="insight-rotulo">PAM · Pressão de pulso</div>
+              <div class="insight-valor">{{ analise.pam.media }} · {{ analise.pressao_pulso.media }} <small>mmHg</small></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-4">
+            <div class="insight">
+              {% if analise.meta %}
+                <div class="insight-rotulo">Dentro da meta ({{ analise.meta.sistolica }}/{{ analise.meta.diastolica }})</div>
+                <div class="insight-valor">{{ analise.meta.pct|floatformat:0 }}%</div>
+                <div class="progress mt-1" role="progressbar" style="height:6px" aria-valuenow="{{ analise.meta.pct|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                  <div class="progress-bar bg-success" style="width: {{ analise.meta.pct|floatformat:0 }}%"></div>
+                </div>
+              {% elif analise.comparativo %}
+                <div class="insight-rotulo">Últimos 30 dias x 30 anteriores</div>
+                <div class="insight-valor">{{ analise.comparativo.delta_sis|floatformat:1 }} / {{ analise.comparativo.delta_dia|floatformat:1 }} <small>mmHg</small></div>
+              {% else %}
+                <div class="insight-rotulo">Meta pessoal</div>
+                <div class="small"><a href="{% url 'pressao:perfil' %}">Defina a meta</a> combinada com seu profissional.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ------------------------------- Gráficos ------------------------------- #}
+<div class="row g-3 mb-3">
+  <div class="col-xl-8">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-0 pt-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="h6 fw-bold mb-0"><i class="bi bi-graph-up me-1 text-brand"></i>Evolução da pressão arterial</h2>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Modo do gráfico">
+          <input type="radio" class="btn-check" name="modo-evolucao" id="modo-medicoes" value="medicoes" checked>
+          <label class="btn btn-outline-secondary" for="modo-medicoes">Medições</label>
+          <input type="radio" class="btn-check" name="modo-evolucao" id="modo-diario" value="diario">
+          <label class="btn btn-outline-secondary" for="modo-diario">Média diária</label>
+        </div>
+      </div>
+      <div class="card-body"><div class="grafico grafico-lg"><canvas id="grafico-evolucao"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-0 pt-3"><h2 class="h6 fw-bold mb-0"><i class="bi bi-pie-chart me-1 text-brand"></i>Faixas de referência</h2></div>
+      <div class="card-body">
+        <div class="grafico"><canvas id="grafico-faixas"></canvas></div>
+        <p class="small text-body-secondary mt-2 mb-0">Diretrizes Brasileiras de HA (2020). Informativo, não é diagnóstico.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-0 pt-3"><h2 class="h6 fw-bold mb-0"><i class="bi bi-sun me-1 text-brand"></i>Média por período do dia</h2></div>
+      <div class="card-body"><div class="grafico"><canvas id="grafico-periodos"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-0 pt-3"><h2 class="h6 fw-bold mb-0"><i class="bi bi-calendar-week me-1 text-brand"></i>Média por dia da semana</h2></div>
+      <div class="card-body"><div class="grafico"><canvas id="grafico-semana"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-0 pt-3"><h2 class="h6 fw-bold mb-0"><i class="bi bi-diagram-3 me-1 text-brand"></i>Sistólica × Diastólica</h2></div>
+      <div class="card-body"><div class="grafico"><canvas id="grafico-dispersao"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+{# ------------------------------- Tabelas ------------------------------- #}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-0 pt-3"><h2 class="h6 fw-bold mb-0"><i class="bi bi-table me-1 text-brand"></i>Resumo por período</h2></div>
+      <div class="card-body pt-0">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Período</th><th class="text-center">Medições</th><th class="text-center">Sistólica</th><th class="text-center">Diastólica</th><th class="text-center">Pulso</th></tr></thead>
+            <tbody>
+              {% for p in analise.por_periodo %}
+              <tr><td class="fw-medium">{{ p.periodo }}</td><td class="text-center">{{ p.n }}</td><td class="text-center">{{ p.sistolica|floatformat:0|default:"—" }}</td><td class="text-center">{{ p.diastolica|floatformat:0|default:"—" }}</td><td class="text-center">{{ p.pulsacao|floatformat:0|default:"—" }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-0 pt-3"><h2 class="h6 fw-bold mb-0"><i class="bi bi-arrow-up-circle me-1 text-danger"></i>Maiores leituras do período</h2></div>
+      <div class="card-body pt-0">
+        <ul class="list-group list-group-flush">
+          {% for m in analise.picos %}
+          <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+            <div><span class="fw-bold">{{ m.sistolica }}/{{ m.diastolica }}</span> <span class="small text-body-secondary ms-1">{{ m.data|date:"d/m/Y" }} {{ m.hora|time:"H:i" }}{% if m.observacoes %} · {{ m.observacoes }}{% endif %}</span></div>
+            <span class="badge rounded-pill faixa-{{ m.classificacao.chave }}">{{ m.classificacao.rotulo }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ analise.series|json_script:"dados-series" }}
+{{ analise.series_diarias|json_script:"dados-diarios" }}
+{{ analise.distribuicao|json_script:"dados-faixas" }}
+{{ analise.por_periodo|json_script:"dados-periodos" }}
+{{ analise.por_dia_semana|json_script:"dados-semana" }}
+{% if analise.meta %}{{ analise.meta|json_script:"dados-meta" }}{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if not analise.vazio %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+{% load static %}<script src="{% static 'js/dashboard.js' %}"></script>
+{% endif %}
+{% endblock %}
+

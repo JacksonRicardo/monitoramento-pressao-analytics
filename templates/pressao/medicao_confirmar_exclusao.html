@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Excluir medição{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-5">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body p-4">
+        <i class="bi bi-exclamation-octagon display-4 text-danger"></i>
+        <h1 class="h4 mt-3">Excluir medição?</h1>
+        <p class="mb-1"><span class="fs-3 fw-bold">{{ object.sistolica }}/{{ object.diastolica }}</span> mmHg</p>
+        <p class="text-body-secondary">{{ object.data|date:"d/m/Y" }} às {{ object.hora|time:"H:i" }} · {{ object.periodo }}</p>
+        <p class="small text-body-secondary">Esta ação não pode ser desfeita.</p>
+        <form method="post" class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+          {% csrf_token %}
+          <a class="btn btn-outline-secondary" href="{% url 'pressao:lista' %}">Cancelar</a>
+          <button class="btn btn-danger" type="submit"><i class="bi bi-trash me-1"></i>Excluir</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,103 @@
+:root {
+  --brand: #c0392b;
+  --brand-escuro: #962d22;
+  --brand-claro: rgba(192, 57, 43, .1);
+}
+
+body { background: #f4f6f9; }
+[data-bs-theme="dark"] body { background: #12151a; }
+[data-bs-theme="dark"] .card { background: #1b1f26; }
+
+.bg-brand { background: linear-gradient(90deg, var(--brand), #a93226) !important; }
+.text-brand { color: var(--brand) !important; }
+
+.btn-brand {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--brand);
+  --bs-btn-border-color: var(--brand);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--brand-escuro);
+  --bs-btn-hover-border-color: var(--brand-escuro);
+  --bs-btn-active-bg: var(--brand-escuro);
+  --bs-btn-active-border-color: var(--brand-escuro);
+  --bs-btn-active-color: #fff;
+}
+
+.navbar .nav-link.active { font-weight: 600; border-bottom: 2px solid rgba(255, 255, 255, .85); }
+@media (max-width: 991.98px) {
+  .navbar .nav-link.active { border-bottom: 0; border-left: 3px solid #fff; padding-left: .6rem; }
+}
+
+.card { border-radius: .9rem; }
+.card-header:first-child { border-radius: .9rem .9rem 0 0; }
+
+/* ---------- KPIs ---------- */
+.kpi .card-body { position: relative; }
+.kpi-icone {
+  width: 42px; height: 42px; border-radius: 12px;
+  display: grid; place-items: center; font-size: 1.25rem;
+  position: absolute; right: 1rem; top: 1rem;
+}
+.kpi-rotulo { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--bs-secondary-color); font-weight: 600; }
+.kpi-valor { font-size: 1.9rem; font-weight: 700; line-height: 1.2; margin: .25rem 0; }
+@media (max-width: 575.98px) {
+  .kpi-valor { font-size: 1.45rem; }
+  .kpi-icone { width: 34px; height: 34px; font-size: 1rem; right: .75rem; top: .75rem; }
+}
+
+.ultima-card { border-top: 4px solid var(--brand) !important; }
+
+/* ---------- Insights ---------- */
+.insight { background: var(--bs-tertiary-bg); border-radius: .7rem; padding: .75rem .9rem; height: 100%; }
+.insight-rotulo { font-size: .75rem; color: var(--bs-secondary-color); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.insight-valor { font-size: 1.25rem; font-weight: 700; }
+.insight-valor small { font-size: .7rem; font-weight: 500; color: var(--bs-secondary-color); }
+.tendencia-alta { color: #dc3545; }
+.tendencia-queda { color: #198754; }
+.tendencia-estavel { color: var(--bs-body-color); }
+
+/* ---------- Gráficos ---------- */
+.grafico { position: relative; height: 260px; }
+.grafico-lg { height: 340px; }
+@media (max-width: 575.98px) {
+  .grafico { height: 230px; }
+  .grafico-lg { height: 280px; }
+}
+
+/* ---------- Faixas de referência ---------- */
+.faixa-otima { background: #198754; color: #fff; }
+.faixa-normal { background: #0dcaf0; color: #052c65; }
+.faixa-pre { background: #ffc107; color: #3d2c00; }
+.faixa-ha1 { background: #fd7e14; color: #fff; }
+.faixa-ha2 { background: #dc3545; color: #fff; }
+.faixa-ha3 { background: #842029; color: #fff; }
+.borda-otima { border-left: 4px solid #198754 !important; }
+.borda-normal { border-left: 4px solid #0dcaf0 !important; }
+.borda-pre { border-left: 4px solid #ffc107 !important; }
+.borda-ha1 { border-left: 4px solid #fd7e14 !important; }
+.borda-ha2 { border-left: 4px solid #dc3545 !important; }
+.borda-ha3 { border-left: 4px solid #842029 !important; }
+
+/* ---------- Tabela / lista de medições ---------- */
+.tabela-medicoes td, .tabela-medicoes th { white-space: nowrap; }
+.tabela-medicoes .pressao { font-weight: 700; font-size: 1.05rem; }
+.medicao-card .pressao { font-size: 1.5rem; font-weight: 700; }
+
+/* ---------- Login ---------- */
+.auth-wrapper { min-height: 75vh; }
+.auth-logo {
+  width: 72px; height: 72px; border-radius: 20px; display: grid; place-items: center;
+  background: var(--brand); color: #fff; font-size: 2.2rem; box-shadow: 0 10px 25px rgba(192, 57, 43, .35);
+}
+
+/* ---------- Formulário ---------- */
+.previa { background: var(--bs-tertiary-bg); border-radius: .8rem; padding: 1rem; min-height: 96px; }
+.opcao-export { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.opcao-export:hover { border-color: var(--brand) !important; }
+
+.mensagens .alert { border-radius: .7rem; }
+
+@media print {
+  .navbar, footer, form, .btn { display: none !important; }
+}
+
